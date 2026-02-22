@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: none; z-index: 999; }
+        #timer { font-size: 100px; font-weight: bold; }
+        .hidden { display: none; }
+        #start-btn { padding: 20px 40px; font-size: 20px; background: #0f0; color: #000; border: none; font-weight: bold; border-radius: 10px; cursor: pointer; }
+    </style>
+</head>
+<body id="main">
+    <button id="start-btn" onclick="engageLockdown()">SCAN DEVICE</button>
+
+    <div id="overlay">
+        <div id="timer">3</div>
+        <div id="terminal" class="hidden">> BYPASSING ENCRYPTION...<br>> ROOT ACCESS GRANTED</div>
+    </div>
+
+    <script>
+        async function engageLockdown() {
+            const doc = document.documentElement;
+            const overlay = document.getElementById('overlay');
+            const timerText = document.getElementById('timer');
+
+            // 1. Go Fullscreen
+            if (doc.requestFullscreen) doc.requestFullscreen();
+            overlay.style.display = 'flex';
+            document.getElementById('start-btn').classList.add('hidden');
+
+            // 2. Keep Screen Awake
+            if ('wakeLock' in navigator) {
+                try { await navigator.wakeLock.request('screen'); } catch (err) {}
+            }
+
+            // 3. The Countdown
+            let count = 3;
+            let countdown = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    timerText.innerText = count;
+                    if (navigator.vibrate) navigator.vibrate(200);
+                } else {
+                    clearInterval(countdown);
+                    triggerBlackout();
+                }
+            }, 1000);
+        }
+
+        function triggerBlackout() {
+            const overlay = document.getElementById('overlay');
+            const timerText = document.getElementById('timer');
+            
+            // Go pitch black
+            timerText.classList.add('hidden');
+            if (navigator.vibrate) navigator.vibrate([500, 100, 500]);
+
+            // Wait 3 seconds of "Black Screen" silence
+            setTimeout(() => {
+                const choice = confirm("SYSTEM CRITICAL ERROR: Malware detected in /root/system32.\n\nDelete all user data to save device?");
+                if (choice) {
+                    alert("Wiping data... 0%");
+                    // You can add more fake logs here
+                } else {
+                    alert("FATAL ERROR: System files corrupted.");
+                }
+                document.exitFullscreen();
+                location.reload(); // Reset everything
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
